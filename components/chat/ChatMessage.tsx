@@ -20,9 +20,14 @@ function renderConteudo(content: string) {
   const flushLista = (key: string) => {
     if (itensLista.length === 0) return;
     blocos.push(
-      <ul key={key} className="list-disc pl-5 space-y-0.5">
+      <ul key={key} className="pl-4 space-y-2 border-l-2 border-outline-variant/30">
         {itensLista.map((item, i) => (
-          <li key={i}>{item}</li>
+          <li
+            key={i}
+            className="relative before:content-[''] before:absolute before:w-1.5 before:h-1.5 before:bg-primary-container before:rounded-full before:-left-5 before:top-2"
+          >
+            {item}
+          </li>
         ))}
       </ul>,
     );
@@ -47,18 +52,39 @@ function renderConteudo(content: string) {
 export default function ChatMessage({ message }: { message: ChatMessageType }) {
   const isUser = message.role === "user";
 
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div className="self-end max-w-[85%] bg-on-surface text-surface-container-lowest rounded-2xl rounded-tr-sm p-4 shadow-md">
+          <p className="font-body-md text-body-md">{message.content}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (message.isError) {
+    return (
+      <div className="flex justify-start">
+        <div className="self-start max-w-[95%] bg-error/10 border border-error/20 text-error rounded-2xl rounded-tl-sm p-4 shadow-md flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px]">error</span>
+          <p className="font-body-md text-body-md">{message.content}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[85%] rounded-lg px-3 py-2 text-sm space-y-1 ${
-          isUser
-            ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-            : message.isError
-              ? "bg-red-50 text-red-800 border border-red-200"
-              : "bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
-        }`}
-      >
-        {renderConteudo(message.content)}
+    <div className="flex justify-start">
+      <div className="self-start max-w-[95%] bg-surface-container-lowest rounded-2xl rounded-tl-sm p-6 shadow-md border border-outline-variant/30">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-outline-variant/20">
+          <span className="material-symbols-outlined text-primary-container text-sm">auto_awesome</span>
+          <span className="font-label-sm text-label-sm text-primary-container uppercase font-bold tracking-widest">
+            Cockpit AI
+          </span>
+        </div>
+        <div className="font-body-md text-body-md text-on-surface-variant space-y-4">
+          {renderConteudo(message.content)}
+        </div>
       </div>
     </div>
   );

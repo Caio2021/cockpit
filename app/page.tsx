@@ -3,19 +3,31 @@ import ChatPanel from "@/components/chat/ChatPanel";
 
 export default function Home() {
   return (
-    <div className="flex flex-col lg:flex-row flex-1 min-h-0">
-      <div className="lg:w-1/2 overflow-y-auto p-6 border-b lg:border-r lg:border-b-0 border-neutral-200 dark:border-neutral-800">
-        <h1 className="text-xl font-semibold mb-1">
+    <>
+      <div className="mb-8">
+        <h2 className="font-headline-lg text-headline-lg text-on-surface mb-2">
           Cockpit Inteligente de Gestão de Empreendimentos
-        </h1>
-        <p className="text-sm text-neutral-500 mb-4">
+        </h2>
+        <p className="font-body-lg text-body-lg text-on-surface-variant">
           Ranking de risco em tempo real dos empreendimentos monitorados.
         </p>
-        <KpiPanel />
+        <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+          Ranking geral de risco (60% peso em atraso de cronograma, 40% em risco financeiro) — 7
+          empreendimentos monitorados.
+        </p>
       </div>
-      <div className="lg:w-1/2 flex flex-col min-h-[60vh] lg:min-h-0">
-        <ChatPanel />
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <div className="xl:col-span-8 flex flex-col gap-6">
+          <KpiPanel />
+        </div>
+
+        <div className="xl:col-span-4 h-full">
+          <div className="glass-card rounded-2xl border border-outline-variant shadow-lg h-[calc(100vh-180px)] sticky top-6 flex flex-col overflow-hidden">
+            <ChatPanel />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
