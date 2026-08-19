@@ -33,7 +33,33 @@ completo:
 6. **Analista de Segurança** revisa antes do merge/push — tem autoridade para bloquear por motivo de
    segurança, incluindo qualquer violação de [REGRAS_SEGURANCA.md](./REGRAS_SEGURANCA.md).
 
+## Registro no Obsidian
+
+Vault: `C:\Users\caios\Documents\Obsidian Vault`. Todo material analisado e implementado
+neste projeto (requisitos, arquitetura, decisões técnicas relevantes tomadas durante a
+implementação) deve ser espelhado em `C:\Users\caios\Documents\Obsidian Vault\Cockpit`,
+mantendo esse caminho sempre referenciado aqui para que fique acessível ao projeto:
+
+- `Cockpit/Requisitos.md` — espelho de [docs/requisitos.md](./docs/requisitos.md).
+- `Cockpit/Arquitetura.md` — espelho de [docs/arquitetura.md](./docs/arquitetura.md).
+- `Cockpit/Log de Decisões.md` — decisões técnicas tomadas durante a implementação que não
+  estavam nos documentos originais (ex.: troca de modelo, fallback de provedor, mudanças de
+  UI). Atualize este arquivo (não crie um novo) a cada decisão relevante nova.
+
+Ao final de qualquer tarefa de análise ou implementação nova, atualize os arquivos
+correspondentes na vault (copiando o conteúdo atualizado ou adicionando uma entrada no log).
+
 ## Convenções gerais
 - Sem abstrações prematuras: prefira código simples e direto ao que a tarefa pede.
 - Sem comentários explicando o óbvio; comente apenas o porquê de decisões não óbvias.
 - Não commitar/dar push sem que o usuário peça explicitamente.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
