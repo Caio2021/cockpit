@@ -20,6 +20,7 @@ fontes de dados citadas no case.
 ## 2. Escopo
 
 **Dentro do escopo (MVP):**
+
 - Chat em linguagem natural (pt-BR) sobre um conjunto de dados mockados que
   representa, de forma unificada, os dados de várias fontes citadas no case
   (ERP, CRM, BI, Planejamento, Compras, Financeiro, Engenharia, Diário de Obras).
@@ -28,10 +29,10 @@ fontes de dados citadas no case.
 - Simulação determinística de atraso de N dias e seu impacto no fluxo de caixa.
 - Painel visual simples (cards/KPIs) ao lado do chat, mostrando o ranking de
   risco dos empreendimentos — reforça a leitura de "cockpit", não só chatbot.
-- Uso de LLM real (Claude, via API Anthropic) chamada apenas no backend (API
-  routes do Next.js).
+- Uso de LLM real (Claude, via API Anthropic e groq) chamada apenas no backend (API
+  routes do Next.js)
+  **Fora do escopo (mencionar apenas como roadmap/arquitetura na apresentação, não implementar):**
 
-**Fora do escopo (mencionar apenas como roadmap/arquitetura na apresentação, não implementar):**
 - Integrações reais com ERP/CRM/BI/SharePoint/sistema de chamados.
 - Autenticação, autorização, multiusuário, perfis de acesso.
 - Orquestração multiagente real (pode ser citada como evolução arquitetural).
@@ -41,43 +42,46 @@ fontes de dados citadas no case.
 ## 3. Requisitos Funcionais (priorizados)
 
 ### P0 — obrigatórios para a demo ao vivo
-| ID | Requisito |
-|---|---|
-| RF01 | O sistema deve expor um chat em português onde o usuário digita perguntas em linguagem natural e recebe respostas em texto. |
+
+| ID   | Requisito                                                                                                                                                                                                                                                              |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RF01 | O sistema deve expor um chat em português onde o usuário digita perguntas em linguagem natural e recebe respostas em texto.                                                                                                                                            |
 | RF02 | O sistema deve manter um conjunto de dados mockados de 6 a 8 empreendimentos, cobrindo: cronograma (% de atraso), orçamento (previsto x realizado), fornecedores críticos e seu histórico de atraso, contratos (data de reajuste, índice), e fluxo de caixa projetado. |
-| RF03 | Responder "Qual empreendimento apresenta maior risco?" identificando o empreendimento e uma classificação de risco (ex.: alto/médio/baixo). |
-| RF04 | Ao ser questionado "Explique o motivo" / "Quais indicadores sustentam essa conclusão?", o sistema deve listar explicitamente os indicadores de dados (não apenas prosa genérica) que embasaram a resposta anterior. |
-| RF05 | Gerar um plano de ação estruturado (lista de passos) para mitigar o risco do empreendimento identificado, quando solicitado ("Gere um plano de ação"). |
-| RF06 | Simular impacto de um atraso de N dias (parametrizável, ex. 30) no fluxo de caixa do empreendimento, retornando um valor quantificado (ex.: R$ ou % de impacto) e uma explicação em linguagem natural do cálculo. |
-| RF07 | Exibir um painel visual (fora do chat) com ranking dos empreendimentos por risco e seus principais KPIs, atualizado com os mesmos dados mockados. |
+| RF03 | Responder "Qual empreendimento apresenta maior risco?" identificando o empreendimento e uma classificação de risco (ex.: alto/médio/baixo).                                                                                                                            |
+| RF04 | Ao ser questionado "Explique o motivo" / "Quais indicadores sustentam essa conclusão?", o sistema deve listar explicitamente os indicadores de dados (não apenas prosa genérica) que embasaram a resposta anterior.                                                    |
+| RF05 | Gerar um plano de ação estruturado (lista de passos) para mitigar o risco do empreendimento identificado, quando solicitado ("Gere um plano de ação").                                                                                                                 |
+| RF06 | Simular impacto de um atraso de N dias (parametrizável, ex. 30) no fluxo de caixa do empreendimento, retornando um valor quantificado (ex.: R$ ou % de impacto) e uma explicação em linguagem natural do cálculo.                                                      |
+| RF07 | Exibir um painel visual (fora do chat) com ranking dos empreendimentos por risco e seus principais KPIs, atualizado com os mesmos dados mockados.                                                                                                                      |
 
 ### P1 — reforçam diferenciais, incluir se sobrar tempo
-| ID | Requisito |
-|---|---|
-| RF08 | Responder "Quais fornecedores estão impactando os cronogramas?" |
-| RF09 | Responder "Quais contratos precisam de reajuste?" |
-| RF10 | Responder "Quais empreendimentos terão estouro de orçamento?" |
-| RF11 | Responder "Qual empreendimento possui maior risco financeiro?" (separado do risco de atraso) |
+
+| ID   | Requisito                                                                                                      |
+| ---- | -------------------------------------------------------------------------------------------------------------- |
+| RF08 | Responder "Quais fornecedores estão impactando os cronogramas?"                                                |
+| RF09 | Responder "Quais contratos precisam de reajuste?"                                                              |
+| RF10 | Responder "Quais empreendimentos terão estouro de orçamento?"                                                  |
+| RF11 | Responder "Qual empreendimento possui maior risco financeiro?" (separado do risco de atraso)                   |
 | RF12 | Manter contexto conversacional dentro da sessão (perguntas de acompanhamento referenciam a resposta anterior). |
 
 ### P2 — fora do protótipo, citar apenas na apresentação
-| ID | Requisito |
-|---|---|
-| RF13 | Integração real com sistemas de origem (ERP/CRM/BI/SharePoint/chamados). |
+
+| ID   | Requisito                                                                        |
+| ---- | -------------------------------------------------------------------------------- |
+| RF13 | Integração real com sistemas de origem (ERP/CRM/BI/SharePoint/chamados).         |
 | RF14 | Múltiplos agentes especializados por domínio de dado (orquestração multiagente). |
-| RF15 | Persistência de histórico de conversas e auditoria de longo prazo. |
+| RF15 | Persistência de histórico de conversas e auditoria de longo prazo.               |
 
 ## 4. Requisitos Não Funcionais
 
-| ID | Requisito | Observação |
-|---|---|---|
-| RNF01 | Idioma: toda a interação (perguntas e respostas) deve funcionar em português (pt-BR). | O case é em português; falhar nisso é falha de demo. |
-| RNF02 | Tempo de resposta perceptível em demo ao vivo: exibir estado de "carregando" imediatamente e resposta completa idealmente em até 8s. | Depende de latência da API Anthropic; sem streaming é aceitável, mas o loading state é obrigatório para não parecer travado. |
-| RNF03 | Explicabilidade/auditabilidade: toda resposta que envolve uma conclusão de risco deve ser rastreável aos campos de dados mockados usados (não pode ser uma alegação da LLM sem lastro nos dados). | Atende diretamente à exigência do case ("explique o motivo", "quais indicadores sustentam"). |
-| RNF04 | Determinismo dos cálculos quantitativos: simulações (ex. impacto de atraso no caixa) devem ser calculadas por código determinístico, e a LLM apenas narra o resultado — a LLM não deve "inventar" o número. | Evita números inconsistentes entre execuções ao vivo durante a entrevista. |
-| RNF05 | Resiliência mínima: se a chamada à API Anthropic falhar ou expirar, exibir mensagem de erro amigável em vez de travar a tela. | Risco alto em demo ao vivo com internet/API externa. |
-| RNF06 | Simplicidade operacional: o protótipo deve rodar localmente com um único comando (`npm run dev`), sem infraestrutura externa além da API Anthropic. | Alinhado ao pedido de solução simples e fácil de apresentar. |
-| RNF07 | Segurança de dados sensíveis e configuração — ver seção 8 (REGRAS_SEGURANCA.md). | Obrigatório por regra do repositório. |
+| ID    | Requisito                                                                                                                                                                                                   | Observação                                                                                                                   |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| RNF01 | Idioma: toda a interação (perguntas e respostas) deve funcionar em português (pt-BR).                                                                                                                       | O case é em português; falhar nisso é falha de demo.                                                                         |
+| RNF02 | Tempo de resposta perceptível em demo ao vivo: exibir estado de "carregando" imediatamente e resposta completa idealmente em até 8s.                                                                        | Depende de latência da API Anthropic; sem streaming é aceitável, mas o loading state é obrigatório para não parecer travado. |
+| RNF03 | Explicabilidade/auditabilidade: toda resposta que envolve uma conclusão de risco deve ser rastreável aos campos de dados mockados usados (não pode ser uma alegação da LLM sem lastro nos dados).           | Atende diretamente à exigência do case ("explique o motivo", "quais indicadores sustentam").                                 |
+| RNF04 | Determinismo dos cálculos quantitativos: simulações (ex. impacto de atraso no caixa) devem ser calculadas por código determinístico, e a LLM apenas narra o resultado — a LLM não deve "inventar" o número. | Evita números inconsistentes entre execuções ao vivo durante a entrevista.                                                   |
+| RNF05 | Resiliência mínima: se a chamada à API Anthropic falhar ou expirar, exibir mensagem de erro amigável em vez de travar a tela.                                                                               | Risco alto em demo ao vivo com internet/API externa.                                                                         |
+| RNF06 | Simplicidade operacional: o protótipo deve rodar localmente com um único comando (`npm run dev`), sem infraestrutura externa além da API Anthropic.                                                         | Alinhado ao pedido de solução simples e fácil de apresentar.                                                                 |
+| RNF07 | Segurança de dados sensíveis e configuração — ver seção 8 (REGRAS_SEGURANCA.md).                                                                                                                            | Obrigatório por regra do repositório.                                                                                        |
 
 ## 5. Perguntas âncora (o protótipo precisa responder bem)
 
@@ -99,8 +103,9 @@ P0). As perguntas 2–5 (RF08–RF11) reforçam amplitude e podem ser P1 se o te
 de desenvolvimento apertar.
 
 **Perguntas adicionais sugeridas (reforçam diferenciais sem expandir escopo de dado):**
+
 - "Quais empreendimentos precisam de atenção imediata esta semana?" — reforça o
-  ângulo de *monitoramento proativo*, não só resposta reativa.
+  ângulo de _monitoramento proativo_, não só resposta reativa.
 - "Compare o risco do Empreendimento A com o Empreendimento B." — mostra que o
   sistema raciocina sobre o conjunto de dados, não apenas recupera um registro.
 - "Se o atraso fosse de 60 dias em vez de 30, o impacto no caixa muda
