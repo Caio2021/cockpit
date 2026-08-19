@@ -12,10 +12,18 @@ __pycache__/
 # Build
 dist/
 build/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
 
 # Logs
 *.log
+npm-debug.log*
 
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Vercel
+.vercel
