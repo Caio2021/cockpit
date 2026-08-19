@@ -1,6 +1,17 @@
 import type { ReactNode } from "react";
 import type { ChatMessage as ChatMessageType } from "./useChat";
 
+// A UI não renderiza markdown (RNF06 — sem dependência de lib de markdown).
+// O system prompt já instrui o modelo a não usar markdown, mas nem todo
+// provedor/modelo obedece sempre (ex.: fallback Groq) — então limpamos aqui
+// como defesa em profundidade, em vez de depender só do prompt.
+function limparMarkdown(texto: string): string {
+  return texto
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, "$1")
+    .replace(/^#{1,6}\s+/, "");
+}
+
 function renderConteudo(content: string) {
   const linhas = content.split("\n");
   const blocos: ReactNode[] = [];
@@ -19,7 +30,7 @@ function renderConteudo(content: string) {
   };
 
   linhas.forEach((linha, i) => {
-    const trimmed = linha.trim();
+    const trimmed = limparMarkdown(linha.trim());
     const marcador = trimmed.match(/^[-•]\s+(.*)/);
     if (marcador) {
       itensLista.push(marcador[1]);
