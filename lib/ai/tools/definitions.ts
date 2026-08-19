@@ -1,4 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import type Groq from "groq-sdk";
 
 export const TOOLS: Anthropic.Tool[] = [
   {
@@ -84,3 +85,17 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
 ];
+
+// Mesmos schemas de TOOLS, convertidos para o formato de tool da API
+// Groq/OpenAI-compatible (usado só no fallback — ver lib/ai/orchestrator.ts).
+// Uma única fonte de verdade para nome/descrição/schema; nunca duplicar.
+export const GROQ_TOOLS: Groq.Chat.Completions.ChatCompletionTool[] = TOOLS.map(
+  (tool) => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.input_schema as Record<string, unknown>,
+    },
+  }),
+);
