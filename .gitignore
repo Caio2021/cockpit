@@ -1,0 +1,21 @@
+# Variáveis de ambiente — NUNCA versionar arquivos .env reais.
+# Ver REGRAS_SEGURANCA.md. Único arquivo .env permitido: .env.exemplo
+.env
+.env.*
+!.env.exemplo
+
+# Dependências
+node_modules/
+venv/
+__pycache__/
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
