@@ -20,7 +20,7 @@ function renderConteudo(content: string) {
   const flushLista = (key: string) => {
     if (itensLista.length === 0) return;
     blocos.push(
-      <ul key={key} className="pl-4 space-y-2 border-l-2 border-outline-variant/30">
+      <ul key={key} className="pl-4 space-y-2 border-l-2 border-outline-variant">
         {itensLista.map((item, i) => (
           <li
             key={i}
@@ -55,7 +55,7 @@ export default function ChatMessage({ message }: { message: ChatMessageType }) {
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="self-end max-w-[85%] bg-on-surface text-surface-container-lowest rounded-2xl rounded-tr-sm p-4 shadow-md">
+        <div className="self-end max-w-[85%] bg-navy-800 text-pure-white rounded-xl rounded-tr-sm px-4 py-3">
           <p className="font-body-md text-body-md">{message.content}</p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function ChatMessage({ message }: { message: ChatMessageType }) {
   if (message.isError) {
     return (
       <div className="flex justify-start">
-        <div className="self-start max-w-[95%] bg-error/10 border border-error/20 text-error rounded-2xl rounded-tl-sm p-4 shadow-md flex items-center gap-2">
+        <div className="self-start max-w-[95%] bg-error/10 border border-error/20 text-error rounded-xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">error</span>
           <p className="font-body-md text-body-md">{message.content}</p>
         </div>
@@ -75,14 +75,14 @@ export default function ChatMessage({ message }: { message: ChatMessageType }) {
 
   return (
     <div className="flex justify-start">
-      <div className="self-start max-w-[95%] bg-surface-container-lowest rounded-2xl rounded-tl-sm p-6 shadow-md border border-outline-variant/30">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-outline-variant/20">
+      <div className="self-start max-w-[95%] bg-surface rounded-xl rounded-tl-sm p-4 border border-outline-variant">
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-outline-variant">
           <span className="material-symbols-outlined text-primary-container text-sm">auto_awesome</span>
-          <span className="font-label-sm text-label-sm text-primary-container uppercase font-bold tracking-widest">
-            Cockpit AI
+          <span className="font-label-sm text-label-sm text-primary-container font-semibold">
+            SafeChat
           </span>
         </div>
-        <div className="font-body-md text-body-md text-on-surface-variant space-y-4">
+        <div className="font-body-md text-body-md text-on-surface-variant space-y-3">
           {renderConteudo(message.content)}
         </div>
       </div>

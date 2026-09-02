@@ -1,15 +1,15 @@
-import type { Classificacao } from "@/lib/risk/util";
+export type Classificacao = "alto" | "medio" | "baixo";
 
 // Classes Tailwind completas (nunca concatenadas em runtime) para que o
 // scanner do Tailwind as encontre — cada classificação de risco mapeia para
-// um token de cor fixo do tema M3 definido em app/globals.css.
+// um token de cor fixo do tema definido em app/globals.css.
 export interface RiskTokens {
   borderBg: string;
   badgeBg: string;
   badgeBorder: string;
   badgeText: string;
   dotBg: string;
-  ringStroke: string;
+  meterBg: string;
   label: string;
 }
 
@@ -20,16 +20,16 @@ export const RISK_TOKENS: Record<Classificacao, RiskTokens> = {
     badgeBorder: "border-error/20",
     badgeText: "text-error",
     dotBg: "bg-error",
-    ringStroke: "stroke-error",
+    meterBg: "bg-error",
     label: "Risco alto",
   },
   medio: {
     borderBg: "bg-primary-container",
     badgeBg: "bg-primary-container/10",
-    badgeBorder: "border-primary-container/20",
+    badgeBorder: "border-primary-container/25",
     badgeText: "text-primary-container",
     dotBg: "bg-primary-container",
-    ringStroke: "stroke-primary-container",
+    meterBg: "bg-primary-container",
     label: "Risco médio",
   },
   baixo: {
@@ -38,21 +38,14 @@ export const RISK_TOKENS: Record<Classificacao, RiskTokens> = {
     badgeBorder: "border-tertiary/20",
     badgeText: "text-tertiary",
     dotBg: "bg-tertiary",
-    ringStroke: "stroke-tertiary",
+    meterBg: "bg-tertiary",
     label: "Risco baixo",
   },
 };
 
-// Cor do anel por métrica (independente da classificação geral do card) —
-// cada indicador tem sua própria leitura de severidade.
-export function ringStrokeAtraso(percentual: number): string {
-  if (percentual >= 25) return "stroke-error";
-  if (percentual >= 10) return "stroke-primary-container";
-  return "stroke-tertiary";
-}
-
-export function ringStrokeEstouro(percentual: number): string {
-  if (percentual >= 20) return "stroke-error";
-  if (percentual >= 10) return "stroke-primary-container";
-  return "stroke-tertiary";
+// Faixas documentadas: >=66 alto, 33-65 médio, <33 baixo.
+export function classificarScore(score: number): Classificacao {
+  if (score >= 66) return "alto";
+  if (score >= 33) return "medio";
+  return "baixo";
 }

@@ -5,14 +5,14 @@ import { useChat } from "./useChat";
 import ChatMessage from "./ChatMessage";
 
 const PERGUNTAS_SUGERIDAS = [
-  "Qual empreendimento apresenta maior risco?",
+  "Qual cliente está em maior risco?",
   "Explique o motivo.",
   "Gere um plano de ação.",
-  "Simule um atraso de 30 dias. Quanto isso impacta o fluxo de caixa?",
+  "Quais ordens de trabalho estão paradas há mais tempo?",
 ];
 
 export default function ChatPanel() {
-  const { messages, isLoading, sendMessage } = useChat();
+  const { messages, isLoading, sendMessage, novaConversa } = useChat();
   const [input, setInput] = useState("");
 
   const handleSubmit = (e: FormEvent) => {
@@ -25,31 +25,58 @@ export default function ChatPanel() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="p-6 border-b border-outline-variant/50 bg-surface-container-lowest/50 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary-container shadow-sm border border-primary-container/20">
-          <span className="material-symbols-outlined text-[28px]">smart_toy</span>
+      <div className="p-5 border-b border-outline-variant flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container shrink-0">
+          <span className="material-symbols-outlined text-[22px]">smart_toy</span>
         </div>
-        <div>
-          <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
-            Pergunte ao Cockpit
-          </h2>
-          <p className="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1 tracking-wide">
-            Respostas com IA
+        <div className="min-w-0 flex-1">
+          <h2 className="font-headline-md text-headline-md text-on-surface">Pergunte ao SafeChat</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant truncate">
+            Respostas com IA sobre a base do SafeOn
           </p>
         </div>
+        <button
+          type="button"
+          onClick={novaConversa}
+          disabled={messages.length === 0 && !isLoading}
+          title="Começar uma nova conversa"
+          className="shrink-0 flex items-center gap-1.5 border border-outline-variant text-on-surface-variant rounded-lg px-3 py-2 font-label-sm text-label-sm font-medium hover:bg-navy-50 hover:text-on-surface hover:border-navy-100 transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+        >
+          <span className="material-symbols-outlined text-[18px]">add_comment</span>
+          Novo chat
+        </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-surface/30">
+      <form onSubmit={handleSubmit} className="p-4 border-b border-outline-variant">
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={isLoading}
+            className="w-full bg-navy-50 border border-navy-100 rounded-lg pl-4 pr-14 py-3.5 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/25 transition-colors"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary-container text-pure-white rounded-lg transition-colors hover:opacity-90 flex items-center justify-center h-9 w-9 disabled:bg-surface-variant disabled:text-on-surface-variant"
+          >
+            <span className="material-symbols-outlined text-[22px]">send</span>
+          </button>
+        </div>
+      </form>
+
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
         {messages.length === 0 && (
           <div className="font-body-md text-body-md text-on-surface-variant">
             <p className="mb-3">Experimente perguntar:</p>
-            <ul className="space-y-2">
+            <ul className="flex flex-col gap-2">
               {PERGUNTAS_SUGERIDAS.map((p) => (
                 <li key={p}>
                   <button
                     type="button"
                     onClick={() => void sendMessage(p)}
-                    className="text-left text-primary-container underline decoration-dotted hover:opacity-80"
+                    className="w-full text-left border border-outline-variant rounded-lg px-3 py-2.5 text-on-surface hover:border-navy-200 hover:bg-surface-variant transition-colors"
                   >
                     {p}
                   </button>
@@ -64,7 +91,7 @@ export default function ChatPanel() {
         ))}
 
         {isLoading && (
-          <div className="self-start max-w-[95%] bg-surface-container-lowest rounded-2xl rounded-tl-sm p-4 shadow-md border border-outline-variant/30">
+          <div className="self-start max-w-[95%] bg-surface-variant rounded-xl px-4 py-3">
             <div className="flex items-center gap-2 font-body-md text-body-md text-on-surface-variant animate-pulse">
               <span className="material-symbols-outlined text-primary-container text-[18px]">
                 auto_awesome
@@ -74,29 +101,6 @@ export default function ChatPanel() {
           </div>
         )}
       </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="p-5 border-t border-outline-variant/50 bg-surface-container-lowest/80 backdrop-blur-sm"
-      >
-        <div className="relative flex items-center">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Digite sua pergunta para a IA..."
-            disabled={isLoading}
-            className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl pl-5 pr-14 py-4 text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all shadow-sm"
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-container p-2 rounded-lg transition-colors hover:bg-primary-container/10 flex items-center justify-center h-10 w-10 disabled:opacity-40"
-          >
-            <span className="material-symbols-outlined text-[24px]">send</span>
-          </button>
-        </div>
-      </form>
     </div>
   );
 }

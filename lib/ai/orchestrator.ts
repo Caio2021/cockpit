@@ -21,74 +21,79 @@ function extractAnthropicText(response: Anthropic.Message): string {
     .join("\n\n");
 }
 
-// Loop de tool use via Anthropic: no máximo uma ida e volta extra à API (não
-// é um loop genérico multi-turno — os handlers não encadeiam entre si). A
-// LLM nunca calcula: este módulo só decide, via `tools`, o que chamar, e
-// repassa o resultado determinístico de `executeTool` de volta para o Claude
-// narrar.
+// Número máximo de idas e voltas de ferramenta antes de exigir uma resposta
+// final. Com o acesso livre ao schema, uma pergunta comum gasta três rodadas
+// (listarTabelas -> descreverTabela -> consultarBase) e ainda sobra folga para
+// a LLM corrigir um SQL que falhou.
+const MAX_RODADAS_TOOL = 8;
+
+async function executarBlocos(
+  blocos: Anthropic.ToolUseBlock[],
+): Promise<Anthropic.ToolResultBlockParam[]> {
+  return Promise.all(
+    blocos.map(async (block) => {
+      try {
+        const { output, isError } = await executeTool(
+          block.name,
+          block.input as Record<string, unknown>,
+        );
+        return {
+          type: "tool_result" as const,
+          tool_use_id: block.id,
+          content: JSON.stringify(output),
+          is_error: isError ?? false,
+        };
+      } catch {
+        // Falha inesperada dentro do handler (bug, não erro de negócio) —
+        // nunca deixa a conversa quebrar; vira um tool_result de erro normal.
+        return {
+          type: "tool_result" as const,
+          tool_use_id: block.id,
+          content: JSON.stringify({ erro: "Falha interna ao executar a ferramenta." }),
+          is_error: true,
+        };
+      }
+    }),
+  );
+}
+
+// Loop de tool use via Anthropic: encadeia rodadas até a LLM parar de pedir
+// ferramenta (ou até o teto de rodadas). A LLM nunca calcula — este módulo só
+// decide, via `tools`, o que chamar, e devolve o resultado determinístico de
+// `executeTool` para o Claude narrar.
 async function runChatAnthropic(message: string, history: ChatTurn[]): Promise<string> {
   const client = getAnthropicClient();
 
-  const baseMessages: Anthropic.MessageParam[] = [
+  const messages: Anthropic.MessageParam[] = [
     ...history.slice(-MAX_HISTORY_TURNS),
     { role: "user", content: message },
   ];
 
-  const first = await client.messages.create({
-    model: MODEL_ID,
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    tools: TOOLS,
-    messages: baseMessages,
-  });
+  for (let rodada = 0; rodada < MAX_RODADAS_TOOL; rodada++) {
+    const ultimaRodada = rodada === MAX_RODADAS_TOOL - 1;
 
-  if (first.stop_reason !== "tool_use") return extractAnthropicText(first);
+    const resposta = await client.messages.create({
+      model: MODEL_ID,
+      max_tokens: 2048,
+      system: SYSTEM_PROMPT,
+      tools: TOOLS,
+      // Na última rodada as ferramentas ainda vão no request (o histórico tem
+      // tool_use e a API exige o schema), mas forçamos o encerramento.
+      tool_choice: ultimaRodada ? { type: "none" } : { type: "auto" },
+      messages,
+    });
 
-  const toolUseBlocks = first.content.filter(
-    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
-  );
+    if (resposta.stop_reason !== "tool_use") return extractAnthropicText(resposta);
 
-  const toolResults: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map((block) => {
-    try {
-      const { output, isError } = executeTool(
-        block.name,
-        block.input as Record<string, unknown>,
-      );
-      return {
-        type: "tool_result",
-        tool_use_id: block.id,
-        content: JSON.stringify(output),
-        is_error: isError ?? false,
-      };
-    } catch {
-      // Falha inesperada dentro do handler (bug, não erro de negócio) —
-      // nunca deixa a conversa quebrar; vira um tool_result de erro normal.
-      return {
-        type: "tool_result",
-        tool_use_id: block.id,
-        content: JSON.stringify({ erro: "Falha interna ao executar a ferramenta." }),
-        is_error: true,
-      };
-    }
-  });
+    const blocos = resposta.content.filter(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
+    );
 
-  const second = await client.messages.create({
-    model: MODEL_ID,
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    tools: TOOLS,
-    messages: [
-      ...baseMessages,
-      { role: "assistant", content: first.content },
-      { role: "user", content: toolResults },
-    ],
-  });
+    messages.push({ role: "assistant", content: resposta.content });
+    messages.push({ role: "user", content: await executarBlocos(blocos) });
+  }
 
-  const text = extractAnthropicText(second);
-  return (
-    text ||
-    "Encontrei mais dados para consultar, mas não consegui concluir a resposta agora. Pode reformular a pergunta?"
-  );
+  return "Consultei a base várias vezes e não cheguei a uma resposta fechada. Pode reformular a pergunta?";
 }
 
 // Mesmo desenho do loop acima, só que contra a API Groq (formato compatível
@@ -98,55 +103,50 @@ async function runChatAnthropic(message: string, history: ChatTurn[]): Promise<s
 async function runChatGroq(message: string, history: ChatTurn[]): Promise<string> {
   const client = getGroqClient();
 
-  const baseMessages: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
+  const messages: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: SYSTEM_PROMPT },
-    ...history.slice(-MAX_HISTORY_TURNS).map((h) => ({ role: h.role, content: h.content }) as Groq.Chat.Completions.ChatCompletionMessageParam),
+    ...history
+      .slice(-MAX_HISTORY_TURNS)
+      .map((h) => ({ role: h.role, content: h.content }) as Groq.Chat.Completions.ChatCompletionMessageParam),
     { role: "user", content: message },
   ];
 
-  const first = await client.chat.completions.create({
-    model: GROQ_MODEL_ID,
-    max_tokens: 2048,
-    messages: baseMessages,
-    tools: GROQ_TOOLS,
-  });
+  for (let rodada = 0; rodada < MAX_RODADAS_TOOL; rodada++) {
+    const ultimaRodada = rodada === MAX_RODADAS_TOOL - 1;
 
-  const firstMessage = first.choices[0]?.message;
-  const toolCalls = firstMessage?.tool_calls;
+    const resposta = await client.chat.completions.create({
+      model: GROQ_MODEL_ID,
+      max_tokens: 2048,
+      messages,
+      tools: GROQ_TOOLS,
+      tool_choice: ultimaRodada ? "none" : "auto",
+    });
 
-  if (!toolCalls || toolCalls.length === 0) {
-    return firstMessage?.content ?? "";
+    const mensagem = resposta.choices[0]?.message;
+    const toolCalls = mensagem?.tool_calls;
+
+    if (!mensagem || !toolCalls || toolCalls.length === 0) {
+      return mensagem?.content ?? "";
+    }
+
+    const resultados: Groq.Chat.Completions.ChatCompletionMessageParam[] = await Promise.all(
+      toolCalls.map(async (call) => {
+        let output: unknown;
+        try {
+          const input = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
+          output = (await executeTool(call.function.name, input)).output;
+        } catch {
+          output = { erro: "Falha interna ao executar a ferramenta." };
+        }
+        return { role: "tool" as const, tool_call_id: call.id, content: JSON.stringify(output) };
+      }),
+    );
+
+    messages.push({ role: "assistant", content: mensagem.content, tool_calls: toolCalls });
+    messages.push(...resultados);
   }
 
-  const toolResultMessages: Groq.Chat.Completions.ChatCompletionMessageParam[] = toolCalls.map(
-    (call) => {
-      let output: unknown;
-      try {
-        const input = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
-        output = executeTool(call.function.name, input).output;
-      } catch {
-        output = { erro: "Falha interna ao executar a ferramenta." };
-      }
-      return { role: "tool", tool_call_id: call.id, content: JSON.stringify(output) };
-    },
-  );
-
-  const second = await client.chat.completions.create({
-    model: GROQ_MODEL_ID,
-    max_tokens: 2048,
-    messages: [
-      ...baseMessages,
-      { role: "assistant", content: firstMessage.content, tool_calls: toolCalls },
-      ...toolResultMessages,
-    ],
-    tools: GROQ_TOOLS,
-  });
-
-  const text = second.choices[0]?.message?.content ?? "";
-  return (
-    text ||
-    "Encontrei mais dados para consultar, mas não consegui concluir a resposta agora. Pode reformular a pergunta?"
-  );
+  return "Consultei a base várias vezes e não cheguei a uma resposta fechada. Pode reformular a pergunta?";
 }
 
 // Ponto de entrada único usado por app/api/chat/route.ts. Tenta Anthropic

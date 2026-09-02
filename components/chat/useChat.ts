@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export interface ChatMessage {
   id: string;
@@ -15,9 +15,20 @@ const MENSAGEM_ERRO =
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  // Identifica a conversa atual. "Novo chat" incrementa o contador, então a
+  // resposta de uma pergunta ainda em voo é descartada em vez de aparecer,
+  // sozinha e sem pergunta, na conversa recém-aberta.
+  const conversaRef = useRef(0);
+
+  const novaConversa = useCallback(() => {
+    conversaRef.current += 1;
+    setMessages([]);
+    setIsLoading(false);
+  }, []);
 
   const sendMessage = useCallback(
     async (text: string) => {
+      const conversa = conversaRef.current;
       const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: text };
       const historyToSend = [...messages, userMsg].map(({ role, content }) => ({
         role,
@@ -40,21 +51,23 @@ export function useChat() {
         }
 
         const { reply } = (await res.json()) as { reply: string };
+        if (conversaRef.current !== conversa) return;
         setMessages((prev) => [
           ...prev,
           { id: crypto.randomUUID(), role: "assistant", content: reply },
         ]);
       } catch {
+        if (conversaRef.current !== conversa) return;
         setMessages((prev) => [
           ...prev,
           { id: crypto.randomUUID(), role: "assistant", content: MENSAGEM_ERRO, isError: true },
         ]);
       } finally {
-        setIsLoading(false);
+        if (conversaRef.current === conversa) setIsLoading(false);
       }
     },
     [messages],
   );
 
-  return { messages, isLoading, sendMessage };
+  return { messages, isLoading, sendMessage, novaConversa };
 }
