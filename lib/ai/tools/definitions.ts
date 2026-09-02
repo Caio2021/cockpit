@@ -3,99 +3,104 @@ import type Groq from "groq-sdk";
 
 export const TOOLS: Anthropic.Tool[] = [
   {
-    name: "getRiskRanking",
+    name: "getResumoOperacao",
     description:
-      "Retorna o ranking completo de empreendimentos por risco geral (combinação de risco de atraso e risco financeiro), com scores 0-100, classificação alto/médio/baixo e indicadores detalhados por empreendimento. Use para perguntas sobre 'qual empreendimento tem maior risco', ranking geral, ou visão consolidada de todos os empreendimentos.",
+      "Retorna a visão consolidada da operação: total de objetos rastreáveis (ativos, sem dispositivo), alertas por situação (total, novos, em tratamento, finalizados) e ordens de trabalho (abertas, fechadas nos últimos 30 dias, idade da mais antiga). Use para perguntas gerais de 'como está a operação', 'quantos alertas em aberto', 'quantas ordens abertas'.",
     input_schema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
-    name: "getRiskFinanceiroRanking",
+    name: "getRankingClientesRisco",
     description:
-      "Retorna o ranking de empreendimentos ordenado especificamente por risco financeiro (estouro de orçamento + exposição a reajuste de contratos), separado do risco de atraso de cronograma. Use para 'qual empreendimento possui maior risco financeiro' ou 'quais empreendimentos terão estouro de orçamento'.",
+      "Retorna o ranking de clientes por risco (score 0-100, classificação alto/médio/baixo), com total de objetos monitorados, quantos estão sem posição na janela, quantos reportam normalmente e quantos alertas em aberto o cliente tem. O score combina 60% de base sem posição e 40% de alertas em aberto. Use para 'qual cliente está em maior risco', 'quais clientes estão com a base parada', ou ranking geral.",
     input_schema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
-    name: "getEmpreendimentoDetalhe",
+    name: "getAlertasPorDia",
     description:
-      "Retorna todos os dados brutos e indicadores usados no cálculo de risco de um empreendimento específico: cronograma, orçamento, fornecedores críticos, contratos e fluxo de caixa projetado. Use para 'explique o motivo' ou 'quais indicadores sustentam essa conclusão' sobre um empreendimento já identificado na conversa.",
+      "Retorna a contagem de violações de alerta por dia numa janela recente. Use para 'quantos alertas por dia', 'em que dia houve mais alertas', 'tendência de alertas'.",
     input_schema: {
       type: "object",
       properties: {
-        identificador: {
-          type: "string",
-          description:
-            "Nome (ou parte do nome) do empreendimento, ou o id retornado por uma chamada anterior a getRiskRanking/getRiskFinanceiroRanking.",
-        },
-      },
-      required: ["identificador"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "getFornecedoresProblematicos",
-    description:
-      "Retorna fornecedores críticos ordenados por dias de atraso histórico (do mais crítico ao menos crítico), opcionalmente filtrados por um empreendimento específico. Use para 'quais fornecedores estão impactando os cronogramas'.",
-    input_schema: {
-      type: "object",
-      properties: {
-        identificador: {
-          type: "string",
-          description:
-            "Opcional. Nome ou id de um empreendimento para filtrar os fornecedores. Se omitido, retorna fornecedores de todos os empreendimentos.",
-        },
+        dias: { type: "integer", description: "Janela em dias. Padrão: 7." },
       },
       required: [],
       additionalProperties: false,
     },
   },
   {
-    name: "getContratosParaReajuste",
+    name: "getOrdensAbertas",
     description:
-      "Retorna contratos com data de próximo reajuste dentro de uma janela de dias a partir de hoje (padrão 120 dias), ordenados pelo mais próximo. Use para 'quais contratos precisam de reajuste'.",
+      "Retorna uma AMOSTRA das ordens de trabalho em aberto: as mais antigas primeiro, com cliente, placa, tipo, status e há quantos dias estão abertas, mais o campo totalAbertas com o total real. Use para 'quais ordens estão paradas há mais tempo' ou 'gargalos de recuperação'. O tamanho da lista é o limite da consulta, NUNCA o total — para contar ordens use totalAbertas ou getResumoOperacao.",
     input_schema: {
       type: "object",
       properties: {
-        janelaDias: {
-          type: "integer",
-          description: "Opcional. Janela em dias a partir de hoje. Padrão: 120.",
-        },
+        limite: { type: "integer", description: "Quantas ordens retornar. Padrão: 20." },
       },
       required: [],
       additionalProperties: false,
     },
   },
   {
-    name: "simularAtrasoNoCaixa",
+    name: "buscarNaBase",
     description:
-      "Simula o impacto financeiro de um atraso de N dias no fluxo de caixa de um empreendimento específico. Cálculo determinístico — a mesma entrada sempre produz o mesmo resultado. Use quando o usuário pedir para simular um atraso (ex: 'simule um atraso de 30 dias') ou perguntar o impacto de X dias no caixa.",
+      "Busca objetos rastreáveis por placa ou chassi, clientes por nome/documento e ordens de trabalho por número ou placa. Use quando o usuário citar uma placa, um nome de cliente ou um número de OT específico.",
     input_schema: {
       type: "object",
       properties: {
-        identificador: {
+        termo: {
           type: "string",
-          description: "Nome ou id do empreendimento a simular.",
-        },
-        diasAtraso: {
-          type: "integer",
-          description: "Número de dias de atraso a simular (ex: 30, 60).",
+          description: "Placa, chassi, nome do cliente, documento ou número da ordem de trabalho.",
         },
       },
-      required: ["identificador", "diasAtraso"],
+      required: ["termo"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "listarTabelas",
+    description:
+      "Lista todas as tabelas do banco do SafeOn com a estimativa de linhas de cada uma. Use como primeiro passo sempre que a pergunta sair do que as outras ferramentas cobrem (contratos, dispositivos, prestadores, financeiro, cercas, radar, locação, processos judiciais, usuários, etc.) — assim você descobre onde o dado mora antes de escrever SQL.",
+    input_schema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "descreverTabela",
+    description:
+      "Retorna as colunas, tipos e nulidade de uma tabela do SafeOn. Use SEMPRE antes de escrever uma consulta em consultarBase: nomes de tabela e coluna são camelCase entre aspas e não podem ser adivinhados.",
+    input_schema: {
+      type: "object",
+      properties: {
+        tabela: { type: "string", description: "Nome exato da tabela, como veio de listarTabelas." },
+      },
+      required: ["tabela"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "consultarBase",
+    description:
+      "Executa uma consulta SELECT somente leitura no banco do SafeOn e devolve as linhas. É a ferramenta de uso geral: qualquer pergunta sobre dados do projeto que as ferramentas específicas não respondam deve ser resolvida aqui. Regras: só SELECT ou WITH, uma única instrução, sem ponto e vírgula no meio; identificadores camelCase precisam de aspas duplas (ex.: \"trackableObjects\".\"customerId\"); um LIMIT é aplicado automaticamente se você não informar. Prefira agregar no SQL (count, sum, group by) a trazer linhas cruas.",
+    input_schema: {
+      type: "object",
+      properties: {
+        sql: { type: "string", description: "A consulta SELECT a executar." },
+        limite: {
+          type: "integer",
+          description: "Máximo de linhas (padrão 100, teto 500).",
+        },
+      },
+      required: ["sql"],
       additionalProperties: false,
     },
   },
 ];
 
-// Mesmos schemas de TOOLS, convertidos para o formato de tool da API
-// Groq/OpenAI-compatible (usado só no fallback — ver lib/ai/orchestrator.ts).
-// Uma única fonte de verdade para nome/descrição/schema; nunca duplicar.
-export const GROQ_TOOLS: Groq.Chat.Completions.ChatCompletionTool[] = TOOLS.map(
-  (tool) => ({
-    type: "function",
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.input_schema as Record<string, unknown>,
-    },
-  }),
-);
+// A API da Groq usa o formato de function calling da OpenAI; mesmo contrato,
+// envelope diferente.
+export const GROQ_TOOLS: Groq.Chat.Completions.ChatCompletionTool[] = TOOLS.map((t) => ({
+  type: "function",
+  function: {
+    name: t.name,
+    description: t.description ?? "",
+    parameters: t.input_schema as Record<string, unknown>,
+  },
+}));

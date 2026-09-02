@@ -1,64 +1,54 @@
+import GlobalSearch from "./GlobalSearch";
+
 export default function Header() {
   return (
-    <header className="glass-card flex justify-between items-center px-gutter py-4 w-full sticky top-0 z-40">
-      <div className="flex items-center gap-6">
-        <div className="font-headline-lg text-headline-lg font-bold text-on-surface">
-          Project Cockpit
-        </div>
-        <nav className="hidden md:flex gap-6 ml-8">
-          <button
-            type="button"
-            className="text-primary-container border-b-2 border-primary-container pb-1 font-body-lg text-body-lg transition-all font-semibold"
-          >
-            Dashboard
-          </button>
-          <button
-            type="button"
-            className="text-on-surface-variant hover:text-on-surface transition-colors pb-1 font-body-lg text-body-lg"
-          >
-            Portfolio
-          </button>
-          <button
-            type="button"
-            className="text-on-surface-variant hover:text-on-surface transition-colors pb-1 font-body-lg text-body-lg"
-          >
-            Analytics
-          </button>
-          <button
-            type="button"
-            className="text-on-surface-variant hover:text-on-surface transition-colors pb-1 font-body-lg text-body-lg"
-          >
-            Reports
-          </button>
-        </nav>
+    <header className="bg-surface border-b border-outline-variant h-16 flex items-center shrink-0 z-40">
+      <div className="w-60 shrink-0 px-6 flex items-center">
+        <span className="text-[26px] leading-none font-semibold tracking-tight text-navy-900">
+          safe <span className="text-primary-container">on</span>
+        </span>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="relative hidden sm:block">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">
-            search
+
+      <div className="flex-1 flex justify-center px-6">
+        <GlobalSearch />
+      </div>
+
+      <div className="flex items-center gap-2 px-6">
+        <button
+          type="button"
+          className="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant p-2 rounded-lg transition-colors relative"
+        >
+          <span className="material-symbols-outlined text-[22px]">notifications</span>
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary-container rounded-full" />
+        </button>
+        <button
+          type="button"
+          className="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant p-2 rounded-lg transition-colors"
+        >
+          <span className="material-symbols-outlined text-[22px]">shield</span>
+        </button>
+
+        <button
+          type="button"
+          className="flex items-center gap-2 border border-outline-variant rounded-lg pl-3 pr-2 py-2 hover:bg-surface-variant transition-colors ml-1"
+        >
+          <span className="material-symbols-outlined text-on-surface-variant text-[18px]">
+            apartment
           </span>
-          <input
-            className="bg-surface-container-lowest border border-outline-variant rounded-full pl-10 pr-4 py-2 text-sm text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all placeholder-on-surface-variant"
-            placeholder="Search projects..."
-            type="text"
-          />
-        </div>
-        <button
-          type="button"
-          className="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant p-2 rounded-full transition-colors relative"
-        >
-          <span className="material-symbols-outlined">notifications</span>
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary-container rounded-full" />
+          <span className="font-body-md text-body-md text-on-surface font-medium">SafeOn</span>
+          <span className="material-symbols-outlined text-on-surface-variant text-[18px]">
+            expand_more
+          </span>
         </button>
-        <button
-          type="button"
-          className="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant p-2 rounded-full transition-colors"
-        >
-          <span className="material-symbols-outlined">settings</span>
+
+        <button type="button" className="flex items-center gap-1 ml-1">
+          <span className="w-9 h-9 rounded-full bg-navy-800 text-pure-white font-label-sm text-label-sm font-semibold flex items-center justify-center">
+            CR
+          </span>
+          <span className="material-symbols-outlined text-on-surface-variant text-[18px]">
+            expand_more
+          </span>
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary-container/20 border border-primary-container/30 overflow-hidden flex items-center justify-center">
-          <span className="material-symbols-outlined text-primary-container">person</span>
-        </div>
       </div>
     </header>
   );

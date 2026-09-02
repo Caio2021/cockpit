@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import Sidebar from "@/components/shell/Sidebar";
 import Header from "@/components/shell/Header";
@@ -15,12 +16,15 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cockpit Inteligente de Gestão de Empreendimentos",
+  title: "SafeOn · Cockpit Operacional",
   description:
-    "Protótipo de cockpit executivo com IA para monitoramento de empreendimentos.",
+    "Cockpit executivo com IA sobre a base do SafeOn — rastreamento, alertas e recuperação.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Largura do menu decidida no servidor para o primeiro render já sair certo.
+  const recolhido = (await cookies()).get("menu-recolhido")?.value === "1";
+
   return (
     <html lang="pt-BR" className={`${hankenGrotesk.variable} ${jetBrainsMono.variable}`}>
       <head>
@@ -31,14 +35,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body
-        className="bg-background text-on-background font-body-md h-screen flex overflow-hidden"
+        className="bg-background text-on-background font-body-md h-screen flex flex-col overflow-hidden"
         style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif" }}
       >
-        <Sidebar />
-        <main className="ml-64 flex-1 flex flex-col h-full overflow-hidden relative bg-[#f5f6f8]">
-          <Header />
-          <div className="flex-1 overflow-y-auto p-gutter relative">{children}</div>
-        </main>
+        <Header />
+        <div className="flex flex-1 min-h-0">
+          <Sidebar inicialRecolhido={recolhido} />
+          <main className="flex-1 min-w-0 overflow-y-auto">
+            <div className="px-gutter py-8">{children}</div>
+          </main>
+        </div>
       </body>
     </html>
   );
